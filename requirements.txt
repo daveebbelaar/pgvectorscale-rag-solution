@@ -2,3 +2,5 @@ pandas
 openai
 psycopg[binary]
 python-dotenv
+instructor
+anthropic

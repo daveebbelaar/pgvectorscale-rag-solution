@@ -51,7 +51,7 @@ CREATE EXTENSION IF NOT EXISTS vectorscale CASCADE;
 Run the Docker container:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 2. Connect to the database using a PostgreSQL GUI client

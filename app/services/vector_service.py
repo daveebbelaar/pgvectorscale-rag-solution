@@ -6,8 +6,7 @@ import pandas as pd
 import psycopg
 from config.settings import get_settings
 from openai import OpenAI
-from psycopg.sql import SQL, Identifier, Placeholder
-from psycopg.types.json import Json
+from psycopg.sql import SQL, Identifier
 from pydantic import BaseModel, Field
 
 
@@ -71,7 +70,7 @@ class VectorService:
     def search(
         self,
         query: str,
-        table_name: str,
+        table_name: str = "embeddings",
         metadata_filter: Optional[MetadataFilter] = None,
         column_filter: Optional[ColumnFilter] = None,
         k: int = 3,
@@ -185,7 +184,7 @@ class VectorService:
 
         return formatted_query, query_params
 
-    def insert_data(self, df: pd.DataFrame, table_name: str) -> None:
+    def insert_data(self, df: pd.DataFrame, table_name: str = "embeddings") -> None:
         """
         Insert new data into the database.
 

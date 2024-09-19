@@ -1,9 +1,10 @@
-import os
 import logging
-from typing import Optional
-from pydantic import Field, BaseModel
+import os
 from functools import lru_cache
+from typing import Optional
+
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
 load_dotenv(dotenv_path="./.env")
 
@@ -14,15 +15,15 @@ def setup_logging():
     )
 
 
-class LLMProviderSettings(BaseModel):
-    temperature: float = Field(default=0.0, ge=0.0, le=1.0)
-    max_tokens: Optional[int] = Field(default=None, gt=0)
-    max_retries: int = Field(default=3, ge=0)
+class LLMSettings(BaseModel):
+    temperature: float = 0.0
+    max_tokens: Optional[int] = None
+    max_retries: int = 3
 
 
-class OpenAISettings(LLMProviderSettings):
+class OpenAISettings(LLMSettings):
     api_key: str = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
-    default_model: str = Field(default="gpt-4")
+    default_model: str = Field(default="gpt-4o")
     embedding_model: str = Field(default="text-embedding-3-small")
 
 
