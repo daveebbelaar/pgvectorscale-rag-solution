@@ -2,6 +2,14 @@
 
 This tutorial will guide you through setting up and using pgvectorscale with Docker, Python and Psycopg 3, using OpenAI's text-embedding-3-small model for embeddings. We will build a RAG (Retrieval-Augmented Generation) solution that includes both retrieval of relevant information and answer generation based on the retrieved context.
 
+## Timescale Documentation
+
+For more information about using PostgreSQL as a vector database in AI applications with Timescale, check out these resources:
+
+- [Blog Post: A Python Library for Using PostgreSQL as a Vector Database in AI Applications](https://www.timescale.com/blog/a-python-library-for-using-postgresql-as-a-vector-database-in-ai-applications/)
+- [GitHub Repository: pgvectorscale](https://github.com/timescale/pgvectorscale)
+
+
 ## Prerequisites
 
 - Docker
