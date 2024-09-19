@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 from datetime import datetime
 
 import pandas as pd
@@ -79,32 +79,49 @@ class VectorStore:
         self,
         query_text: str,
         limit: int = 5,
-        metadata_filter: dict = None,
-        time_range: tuple[datetime, datetime] = None,
+        metadata_filter: Union[dict, List[dict]] = None,
+        predicates: Optional[client.Predicates] = None,
+        time_range: Optional[Tuple[datetime, datetime]] = None,
         return_dataframe: bool = True,
     ) -> Union[List[Tuple[Any, ...]], pd.DataFrame]:
         """
         Query the vector database for similar embeddings based on input text.
 
+        More info:
+            https://github.com/timescale/docs/blob/latest/ai/python-interface-for-pgvector-and-timescale-vector.md
+
         Args:
             query_text: The input text to search for.
             limit: The maximum number of results to return.
-            metadata_filter: A dictionary of metadata key-value pairs to filter results.
+            metadata_filter: A dictionary or list of dictionaries for equality-based metadata filtering.
+            predicates: A Predicates object for complex metadata filtering.
+                - Predicates objects are defined by the name of the metadata key, an operator, and a value.
+                - Operators: ==, !=, >, >=, <, <=
+                - & is used to combine multiple predicates with AND operator.
+                - | is used to combine multiple predicates with OR operator.
             time_range: A tuple of (start_date, end_date) to filter results by time.
             return_dataframe: Whether to return results as a DataFrame (default: True).
 
         Returns:
             Either a list of tuples or a pandas DataFrame containing the search results.
 
-        Examples:
-            Search for similar embeddings:
+        Basic Examples:
+            Basic search:
                 vector_store.search("What are your shipping options?")
             Search with metadata filter:
-                vector_store.search("What are your shipping options?", metadata_filter={"category": "Shipping"})
+                vector_store.search("Shipping options", metadata_filter={"category": "Shipping"})
+        
+        Predicates Examples:
+            Search with predicates:
+                vector_store.search("Pricing", predicates=client.Predicates("price", ">", 100))
+            Search with complex combined predicates:
+                complex_pred = (client.Predicates("category", "==", "Electronics") & client.Predicates("price", "<", 1000)) | \
+                               (client.Predicates("category", "==", "Books") & client.Predicates("rating", ">=", 4.5))
+                vector_store.search("High-quality products", predicates=complex_pred)
+        
+        Time-based filtering:
             Search with time range:
-                vector_store.search("What are your shipping options?", time_range=(datetime(2024, 1, 1), datetime(2024, 1, 31)))
-            Search returning raw results:
-                vector_store.search("What are your shipping options?", return_dataframe=False)
+                vector_store.search("Recent updates", time_range=(datetime(2024, 1, 1), datetime(2024, 1, 31)))
         """
         query_embedding = self.get_embedding(query_text)
 
@@ -116,6 +133,9 @@ class VectorStore:
 
         if metadata_filter:
             search_args["filter"] = metadata_filter
+
+        if predicates:
+            search_args["predicates"] = predicates
 
         if time_range:
             start_date, end_date = time_range

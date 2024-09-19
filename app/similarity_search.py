@@ -1,6 +1,7 @@
 from datetime import datetime
 from database.vector_store import VectorStore
 from services.synthesizer import Synthesizer
+from timescale_vector import client
 
 # Initialize VectorStore
 vec = VectorStore()
@@ -51,6 +52,25 @@ print("\nThought process:")
 for thought in response.thought_process:
     print(f"- {thought}")
 print(f"\nContext: {response.enough_context}")
+
+# --------------------------------------------------------------
+# Advanced filtering using Predicates
+# --------------------------------------------------------------
+
+predicates = client.Predicates("category", "==", "Shipping")
+results = vec.search(relevant_question, limit=3, predicates=predicates)
+
+
+predicates = client.Predicates("category", "==", "Shipping") | client.Predicates(
+    "category", "==", "Services"
+)
+results = vec.search(relevant_question, limit=3, predicates=predicates)
+
+
+predicates = client.Predicates("category", "==", "Shipping") & client.Predicates(
+    "created_at", ">", "2024-09-01"
+)
+results = vec.search(relevant_question, limit=3, predicates=predicates)
 
 # --------------------------------------------------------------
 # Time-based filtering
