@@ -1,4 +1,4 @@
-# RAG Solution with pgvectorscale & Python
+# Building a High-Performance RAG Solution with Timescale Vector and Python
 
 This tutorial will guide you through setting up and using pgvectorscale with Docker and Python, leveraging OpenAI's powerful text-embedding-3-small model for embeddings. You'll learn to build a cutting-edge RAG (Retrieval-Augmented Generation) solution, combining advanced retrieval techniques (including hybrid search) with intelligent answer generation based on the retrieved context. Perfect for AI engineers looking to enhance their projects with state-of-the-art vector search and generation capabilities with the power of PostgreSQL.
 
@@ -8,8 +8,8 @@ For more information about using PostgreSQL as a vector database in AI applicati
 
 - [Blog Post: A Python Library for Using PostgreSQL as a Vector Database in AI Applications](https://www.timescale.com/blog/a-python-library-for-using-postgresql-as-a-vector-database-in-ai-applications/)
 - [Blog Post: How We Made PostgreSQL a Better Vector Database](https://www.timescale.com/blog/how-we-made-postgresql-the-best-vector-database/)
+- [Blog Post: RAG Is More Than Just Vector Search](https://www.timescale.com/blog/rag-is-more-than-just-vector-search/)
 - [GitHub Repository: pgvectorscale](https://github.com/timescale/pgvectorscale)
-
 
 ## Why PostgreSQL?
 
