@@ -1,4 +1,4 @@
-# Pgvectorscale RA Solution
+# Pgvectorscale RAG Solution with Python
 
 This tutorial will guide you through setting up and using pgvectorscale with Docker, Python and Psycopg 3, using OpenAI's text-embedding-3-small model for embeddings. We will build a RAG (Retrieval-Augmented Generation) solution that includes both retrieval of relevant information and answer generation based on the retrieved context.
 
