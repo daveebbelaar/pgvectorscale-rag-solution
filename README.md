@@ -102,11 +102,12 @@ See `similarity_search.py` for the implementation. This script also uses OpenAI'
 
 ## Usage
 
-1. Set your OpenAI API key as an environment variable in `.env`
-2. Run the Docker container
-3. Install the required Python packages using `pip install requirements.txts`
-4. Execute `insert_vectors.py` to populate the database
-5. Execute `similarity_search.py` to perform similarity searches
+1. Create a copy of `example.env` and rename it to `.env`
+2. Open `.env` and fill in your OpenAI API key. Leave the database settings as is
+3. Run the Docker container
+4. Install the required Python packages using `pip install -r requirements.txt`
+5. Execute `insert_vectors.py` to populate the database
+6. Play with `similarity_search.py` to perform similarity searches
 
 ## Cosine Similarity in Vector Search
 
