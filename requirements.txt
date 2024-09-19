@@ -2,5 +2,6 @@ pandas
 openai
 psycopg[binary]
 python-dotenv
+timescale_vector
 instructor
 anthropic

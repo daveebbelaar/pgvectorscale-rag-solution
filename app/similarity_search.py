@@ -1,21 +1,16 @@
+from datetime import datetime
 from database.vector_store import VectorStore
-from database.vector_retriever import ColumnFilter, VectorRetriever
 from services.synthesizer import Synthesizer
 
-vector_store = VectorStore()
-vector_retriever = VectorRetriever(vector_store)
+# Initialize VectorStore
+vec = VectorStore()
 
 # --------------------------------------------------------------
 # Shipping question
 # --------------------------------------------------------------
 
 relevant_question = "What are your shipping options?"
-
-results = vector_retriever.search(
-    relevant_question,
-    table_name="embeddings",
-    k=3,
-)
+results = vec.search(relevant_question, limit=3)
 
 response = Synthesizer.generate_response(question=relevant_question, context=results)
 
@@ -31,11 +26,7 @@ print(f"\nContext: {response.enough_context}")
 
 irrelevant_question = "What is the weather in Tokyo?"
 
-results = vector_retriever.search(
-    irrelevant_question,
-    table_name="embeddings",
-    k=3,
-)
+results = vec.search(irrelevant_question, limit=3)
 
 response = Synthesizer.generate_response(question=irrelevant_question, context=results)
 
@@ -45,16 +36,30 @@ for thought in response.thought_process:
     print(f"- {thought}")
 print(f"\nContext: {response.enough_context}")
 
+# --------------------------------------------------------------
+# Metadata filtering
+# --------------------------------------------------------------
+
+metadata_filter = {"category": "Shipping"}
+
+results = vec.search(relevant_question, limit=3, metadata_filter=metadata_filter)
+
+response = Synthesizer.generate_response(question=relevant_question, context=results)
+
+print(f"\n{response.answer}")
+print("\nThought process:")
+for thought in response.thought_process:
+    print(f"- {thought}")
+print(f"\nContext: {response.enough_context}")
 
 # --------------------------------------------------------------
-# Column filtering
+# Time-based filtering
 # --------------------------------------------------------------
 
-column_filter = ColumnFilter(column="category", value="Shipping")
+# September — Returning results
+time_range = (datetime(2024, 9, 1), datetime(2024, 9, 30))
+results = vec.search(relevant_question, limit=3, time_range=time_range)
 
-results = vector_retriever.search(
-    relevant_question,
-    table_name="embeddings",
-    column_filter=column_filter,
-    k=3,
-)
+# August — Not returning any results
+time_range = (datetime(2024, 8, 1), datetime(2024, 8, 30))
+results = vec.search(relevant_question, limit=3, time_range=time_range)

@@ -15,16 +15,12 @@ class SynthesizedResponse(BaseModel):
 
 
 class Synthesizer:
-    TEMPLATE = """
+    SYSTEM_PROMPT = """
+    # Role and Purpose
     You are an AI assistant for an e-commerce FAQ system. Your task is to synthesize a coherent and helpful answer 
     based on the given question and relevant context retrieved from a knowledge database.
 
-    Question: {question}
-
-    Relevant Context:
-    {context}
-
-    Guidelines:
+    # Guidelines:
     1. Provide a clear and concise answer to the question.
     2. Use only the information from the relevant context to support your answer.
     3. The context is retrieved based on cosine similarity, so some information might be missing or irrelevant.
@@ -33,39 +29,42 @@ class Synthesizer:
     6. If you cannot answer the question based on the given context, clearly state that.
     7. Maintain a helpful and professional tone appropriate for customer service.
     8. Adhere strictly to company guidelines and policies by using only the provided knowledge base.
-
-    Synthesize your answer below:
+    
+    Review the question from the user:
     """
 
     @staticmethod
     def generate_response(question: str, context: pd.DataFrame) -> SynthesizedResponse:
-        """
-        Generate a synthesized response based on the question and context.
+        """Generates a synthesized response based on the question and context.
 
         Args:
-            question (str): The user's question.
-            context (pd.DataFrame): The relevant context retrieved from the knowledge base.
+            question: The user's question.
+            context: The relevant context retrieved from the knowledge base.
 
         Returns:
-            SynthesizedResponse: The synthesized response containing thought process and answer.
+            A SynthesizedResponse containing thought process and answer.
         """
-        prompt = Synthesizer.TEMPLATE.format(
-            question=question,
-            context=Synthesizer.convert_dataframe(
-                context, columns_to_keep=["answer", "question", "category"]
-            ),
+        context_str = Synthesizer.dataframe_to_json(
+            context, columns_to_keep=["content", "category"]
         )
-        llm = LLMFactory("openai")
+
         messages = [
-            {"role": "system", "content": prompt},
+            {"role": "system", "content": Synthesizer.SYSTEM_PROMPT},
+            {"role": "user", "content": f"# User question:\n{question}"},
+            {
+                "role": "assistant",
+                "content": f"# Retrieved information:\n{context_str}",
+            },
         ]
+
+        llm = LLMFactory("openai")
         return llm.create_completion(
             response_model=SynthesizedResponse,
             messages=messages,
         )
 
     @staticmethod
-    def convert_dataframe(
+    def dataframe_to_json(
         context: pd.DataFrame,
         columns_to_keep: List[str],
     ) -> str:
