@@ -1,2 +1,4 @@
-ipykernel
+pandas
+openai
+psycopg[binary]
 python-dotenv
