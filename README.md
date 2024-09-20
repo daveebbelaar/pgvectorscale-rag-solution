@@ -1,8 +1,8 @@
-# Building a High-Performance RAG Solution with Timescale Vector and Python
+# Building a High-Performance RAG Solution with Pgvectorscale and Python
 
 This tutorial will guide you through setting up and using pgvectorscale with Docker and Python, leveraging OpenAI's powerful text-embedding-3-small model for embeddings. You'll learn to build a cutting-edge RAG (Retrieval-Augmented Generation) solution, combining advanced retrieval techniques (including hybrid search) with intelligent answer generation based on the retrieved context. Perfect for AI engineers looking to enhance their projects with state-of-the-art vector search and generation capabilities with the power of PostgreSQL.
 
-## Timescale Documentation
+## Pgvectorscale Documentation
 
 For more information about using PostgreSQL as a vector database in AI applications with Timescale, check out these resources:
 
@@ -13,15 +13,15 @@ For more information about using PostgreSQL as a vector database in AI applicati
 
 ## Why PostgreSQL?
 
-Using PostgreSQL with the pgvector extension as your vector database offers several key advantages over dedicated vector databases:
+Using PostgreSQL with pgvectorscale as your vector database offers several key advantages over dedicated vector databases:
 
 - PostgreSQL is a robust, open-source database with a rich ecosystem of tools, drivers, and connectors. This ensures transparency, community support, and continuous improvements.
 
 - By using PostgreSQL, you can manage both your relational and vector data within a single database. This reduces operational complexity, as there's no need to maintain and synchronize multiple databases.
 
-- Timescale Vector enhances pgvector with faster search capabilities, higher recall, and efficient time-based filtering. It leverages advanced indexing techniques, such as the DiskANN-inspired index, to significantly speed up Approximate Nearest Neighbor (ANN) searches.
+- Pgvectorscale enhances pgvector with faster search capabilities, higher recall, and efficient time-based filtering. It leverages advanced indexing techniques, such as the DiskANN-inspired index, to significantly speed up Approximate Nearest Neighbor (ANN) searches.
 
-Timescale Vector builds on top of [pgvector](https://github.com/pgvector/pgvector), offering improved performance and additional features, making PostgreSQL a powerful and versatile choice for AI applications.
+Pgvectorscale Vector builds on top of [pgvector](https://github.com/pgvector/pgvector), offering improved performance and additional features, making PostgreSQL a powerful and versatile choice for AI applications.
 
 ## Prerequisites
 
