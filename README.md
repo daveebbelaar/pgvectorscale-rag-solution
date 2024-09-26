@@ -6,10 +6,10 @@ This tutorial will guide you through setting up and using `pgvectorscale` with D
 
 For more information about using PostgreSQL as a vector database in AI applications with Timescale, check out these resources:
 
-- [Blog Post: A Python Library for Using PostgreSQL as a Vector Database in AI Applications](https://www.timescale.com/blog/a-python-library-for-using-postgresql-as-a-vector-database-in-ai-applications/)
-- [Blog Post: How We Made PostgreSQL a Better Vector Database](https://www.timescale.com/blog/how-we-made-postgresql-the-best-vector-database/)
-- [Blog Post: RAG Is More Than Just Vector Search](https://www.timescale.com/blog/rag-is-more-than-just-vector-search/)
 - [GitHub Repository: pgvectorscale](https://github.com/timescale/pgvectorscale)
+- [Blog Post: PostgreSQL and Pgvector: Now Faster Than Pinecone, 75% Cheaper, and 100% Open Source](https://www.timescale.com/blog/pgvector-is-now-as-fast-as-pinecone-at-75-less-cost/)
+- [Blog Post: RAG Is More Than Just Vector Search](https://www.timescale.com/blog/rag-is-more-than-just-vector-search/)
+- [Blog Post: A Python Library for Using PostgreSQL as a Vector Database in AI Applications](https://www.timescale.com/blog/a-python-library-for-using-postgresql-as-a-vector-database-in-ai-applications/)
 
 ## Why PostgreSQL?
 
@@ -103,7 +103,7 @@ Timescale Vector offers indexing options to accelerate similarity queries, parti
    - pgvector's HNSW: Hierarchical Navigable Small World graph index
    - pgvector's IVFFLAT: Inverted file index
 
-2. The DiskANN-inspired index is Timescale's latest offering, providing improved performance. Refer to the [Timescale Vector explainer blog](https://www.timescale.com/blog/how-we-made-postgresql-the-best-vector-database/) for detailed information and benchmarks.
+2. The DiskANN-inspired index is Timescale's latest offering, providing improved performance. Refer to the [Timescale Vector explainer blog](https://www.timescale.com/blog/pgvector-is-now-as-fast-as-pinecone-at-75-less-cost/) for detailed information and benchmarks.
 
 For optimal query performance, creating an index on the embedding column is recommended, especially for large vector datasets.
 
