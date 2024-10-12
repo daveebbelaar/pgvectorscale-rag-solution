@@ -1,9 +1,11 @@
 import logging
 import time
-from typing import Any, List, Optional, Tuple, Union
 from datetime import datetime
+from typing import Any, List, Optional, Tuple, Union
 
+import cohere
 import pandas as pd
+import psycopg
 from config.settings import get_settings
 from openai import OpenAI
 from timescale_vector import client
@@ -17,6 +19,7 @@ class VectorStore:
         self.settings = get_settings()
         self.openai_client = OpenAI(api_key=self.settings.openai.api_key)
         self.embedding_model = self.settings.openai.embedding_model
+        self.cohere_client = cohere.ClientV2(api_key=self.settings.cohere.api_key)
         self.vector_settings = self.settings.vector_store
         self.vec_client = client.Sync(
             self.settings.database.service_url,
@@ -24,6 +27,22 @@ class VectorStore:
             self.vector_settings.embedding_dimensions,
             time_partition_interval=self.vector_settings.time_partition_interval,
         )
+
+    def create_keyword_search_index(self):
+        """Create a GIN index for keyword search if it doesn't exist."""
+        index_name = f"idx_{self.vector_settings.table_name}_contents_gin"
+        create_index_sql = f"""
+        CREATE INDEX IF NOT EXISTS {index_name}
+        ON {self.vector_settings.table_name} USING gin(to_tsvector('english', contents));
+        """
+        try:
+            with psycopg.connect(self.settings.database.service_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(create_index_sql)
+                    conn.commit()
+                    logging.info(f"GIN index '{index_name}' created or already exists.")
+        except Exception as e:
+            logging.error(f"Error while creating GIN index: {str(e)}")
 
     def get_embedding(self, text: str) -> List[float]:
         """
@@ -75,9 +94,9 @@ class VectorStore:
             f"Inserted {len(df)} records into {self.vector_settings.table_name}"
         )
 
-    def search(
+    def semantic_search(
         self,
-        query_text: str,
+        query: str,
         limit: int = 5,
         metadata_filter: Union[dict, List[dict]] = None,
         predicates: Optional[client.Predicates] = None,
@@ -91,7 +110,7 @@ class VectorStore:
             https://github.com/timescale/docs/blob/latest/ai/python-interface-for-pgvector-and-timescale-vector.md
 
         Args:
-            query_text: The input text to search for.
+            query: The input text to search for.
             limit: The maximum number of results to return.
             metadata_filter: A dictionary or list of dictionaries for equality-based metadata filtering.
             predicates: A Predicates object for complex metadata filtering.
@@ -107,23 +126,23 @@ class VectorStore:
 
         Basic Examples:
             Basic search:
-                vector_store.search("What are your shipping options?")
+                vector_store.semantic_search("What are your shipping options?")
             Search with metadata filter:
-                vector_store.search("Shipping options", metadata_filter={"category": "Shipping"})
+                vector_store.semantic_search("Shipping options", metadata_filter={"category": "Shipping"})
         
         Predicates Examples:
             Search with predicates:
-                vector_store.search("Pricing", predicates=client.Predicates("price", ">", 100))
+                vector_store.semantic_search("Pricing", predicates=client.Predicates("price", ">", 100))
             Search with complex combined predicates:
                 complex_pred = (client.Predicates("category", "==", "Electronics") & client.Predicates("price", "<", 1000)) | \
                                (client.Predicates("category", "==", "Books") & client.Predicates("rating", ">=", 4.5))
-                vector_store.search("High-quality products", predicates=complex_pred)
+                vector_store.semantic_search("High-quality products", predicates=complex_pred)
         
         Time-based filtering:
             Search with time range:
-                vector_store.search("Recent updates", time_range=(datetime(2024, 1, 1), datetime(2024, 1, 31)))
+                vector_store.semantic_search("Recent updates", time_range=(datetime(2024, 1, 1), datetime(2024, 1, 31)))
         """
-        query_embedding = self.get_embedding(query_text)
+        query_embedding = self.get_embedding(query)
 
         start_time = time.time()
 
@@ -144,7 +163,7 @@ class VectorStore:
         results = self.vec_client.search(query_embedding, **search_args)
         elapsed_time = time.time() - start_time
 
-        logging.info(f"Vector search completed in {elapsed_time:.3f} seconds")
+        self._log_search_time("Vector", elapsed_time)
 
         if return_dataframe:
             return self._create_dataframe_from_results(results)
@@ -223,3 +242,144 @@ class VectorStore:
             logging.info(
                 f"Deleted records matching metadata filter from {self.vector_settings.table_name}"
             )
+
+    def _log_search_time(self, search_type: str, elapsed_time: float) -> None:
+        """
+        Log the time taken for a search operation.
+
+        Args:
+            search_type: The type of search performed (e.g., 'Vector', 'Keyword').
+            elapsed_time: The time taken for the search operation in seconds.
+        """
+        logging.info(f"{search_type} search completed in {elapsed_time:.3f} seconds")
+
+    def keyword_search(
+        self, query: str, limit: int = 5, return_dataframe: bool = True
+    ) -> Union[List[Tuple[str, str, float]], pd.DataFrame]:
+        """
+        Perform a keyword search on the contents of the vector store.
+
+        Args:
+            query: The search query string.
+            limit: The maximum number of results to return. Defaults to 5.
+            return_dataframe: Whether to return results as a DataFrame. Defaults to True.
+
+        Returns:
+            Either a list of tuples (id, contents, rank) or a pandas DataFrame containing the search results.
+
+        Example:
+            results = vector_store.keyword_search("shipping options")
+        """
+        search_sql = f"""
+        SELECT id, contents, ts_rank_cd(to_tsvector('english', contents), query) as rank
+        FROM {self.vector_settings.table_name}, websearch_to_tsquery('english', %s) query
+        WHERE to_tsvector('english', contents) @@ query
+        ORDER BY rank DESC
+        LIMIT %s
+        """
+
+        start_time = time.time()
+
+        # Create a new connection using psycopg3
+        with psycopg.connect(self.settings.database.service_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(search_sql, (query, limit))
+                results = cur.fetchall()
+
+        elapsed_time = time.time() - start_time
+        self._log_search_time("Keyword", elapsed_time)
+
+        if return_dataframe:
+            df = pd.DataFrame(results, columns=["id", "content", "rank"])
+            df["id"] = df["id"].astype(str)
+            return df
+        else:
+            return results
+
+    def hybrid_search(
+        self,
+        query: str,
+        keyword_k: int = 5,
+        semantic_k: int = 5,
+        rerank: bool = False,
+        top_n: int = 5,
+    ) -> pd.DataFrame:
+        """
+        Perform a hybrid search combining keyword and semantic search results,
+        with optional reranking using Cohere.
+
+        Args:
+            query: The search query string.
+            keyword_k: The number of results to return from keyword search. Defaults to 5.
+            semantic_k: The number of results to return from semantic search. Defaults to 5.
+            rerank: Whether to apply Cohere reranking. Defaults to True.
+            top_n: The number of top results to return after reranking. Defaults to 5.
+
+        Returns:
+            A pandas DataFrame containing the combined search results with a 'search_type' column.
+
+        Example:
+            results = vector_store.hybrid_search("shipping options", keyword_k=3, semantic_k=3, rerank=True, top_n=5)
+        """
+        # Perform keyword search
+        keyword_results = self.keyword_search(
+            query, limit=keyword_k, return_dataframe=True
+        )
+        keyword_results["search_type"] = "keyword"
+        keyword_results = keyword_results[["id", "content", "search_type"]]
+
+        # Perform semantic search
+        semantic_results = self.semantic_search(
+            query, limit=semantic_k, return_dataframe=True
+        )
+        semantic_results["search_type"] = "semantic"
+        semantic_results = semantic_results[["id", "content", "search_type"]]
+
+        # Combine results
+        combined_results = pd.concat(
+            [keyword_results, semantic_results], ignore_index=True
+        )
+
+        # Remove duplicates, keeping the first occurrence (which maintains the original order)
+        combined_results = combined_results.drop_duplicates(subset=["id"], keep="first")
+
+        if rerank:
+            return self._rerank_results(query, combined_results, top_n)
+
+        return combined_results
+
+    def _rerank_results(
+        self, query: str, combined_results: pd.DataFrame, top_n: int
+    ) -> pd.DataFrame:
+        """
+        Rerank the combined search results using Cohere.
+
+        Args:
+            query: The original search query.
+            combined_results: DataFrame containing the combined keyword and semantic search results.
+            top_n: The number of top results to return after reranking.
+
+        Returns:
+            A pandas DataFrame containing the reranked results.
+        """
+        rerank_results = self.cohere_client.v2.rerank(
+            model="rerank-english-v3.0",
+            query=query,
+            documents=combined_results["content"].tolist(),
+            top_n=top_n,
+            return_documents=True,
+        )
+
+        reranked_df = pd.DataFrame(
+            [
+                {
+                    "id": combined_results.iloc[result.index]["id"],
+                    "content": result.document,
+                    "search_type": combined_results.iloc[result.index]["search_type"],
+                    "relevance_score": result.relevance_score,
+                }
+                for result in rerank_results.results
+            ]
+        )
+
+        return reranked_df.sort_values("relevance_score", ascending=False)

@@ -6,46 +6,50 @@ from services.llm_factory import LLMFactory
 
 class SynthesizedResponse(BaseModel):
     thought_process: List[str] = Field(
-        description="List of thoughts that the AI assistant had while synthesizing the answer"
+        description="List of thoughts that the AI assistant had while synthesizing the answer from CNN news articles"
     )
-    answer: str = Field(description="The synthesized answer to the user's question")
+    answer: str = Field(
+        description="The synthesized answer to the user's question based on CNN news articles"
+    )
     enough_context: bool = Field(
-        description="Whether the assistant has enough context to answer the question"
+        description="Whether the assistant has enough context from the news articles to answer the question"
     )
 
 
 class Synthesizer:
     SYSTEM_PROMPT = """
     # Role and Purpose
-    You are an AI assistant for an e-commerce FAQ system. Your task is to synthesize a coherent and helpful answer 
-    based on the given question and relevant context retrieved from a knowledge database.
+    You are an AI assistant for a news information retrieval system. Your task is to synthesize a coherent and accurate answer 
+    based on the given question and relevant context retrieved from a database of CNN news articles.
 
     # Guidelines:
-    1. Provide a clear and concise answer to the question.
+    1. Provide a clear, concise, and informative answer to the question based on the CNN news articles.
     2. Use only the information from the relevant context to support your answer.
-    3. The context is retrieved based on cosine similarity, so some information might be missing or irrelevant.
+    3. The context is retrieved based on relevance, so some information might be missing or less relevant.
     4. Be transparent when there is insufficient information to fully answer the question.
-    5. Do not make up or infer information not present in the provided context.
+    5. Do not make up or infer information not present in the provided news articles.
     6. If you cannot answer the question based on the given context, clearly state that.
-    7. Maintain a helpful and professional tone appropriate for customer service.
-    8. Adhere strictly to company guidelines and policies by using only the provided knowledge base.
+    7. Maintain an objective and informative tone appropriate for news reporting.
+    8. Provide a helpful summary and overview of the information found in the news articles.
+    9. Mention the sources of information by referencing the CNN articles when possible.
+    10. If there are multiple perspectives or conflicting information in the articles, present them objectively.
     
     Review the question from the user:
     """
 
     @staticmethod
     def generate_response(question: str, context: pd.DataFrame) -> SynthesizedResponse:
-        """Generates a synthesized response based on the question and context.
+        """Generates a synthesized response based on the question and context from CNN news articles.
 
         Args:
             question: The user's question.
-            context: The relevant context retrieved from the knowledge base.
+            context: The relevant context retrieved from the CNN news article database.
 
         Returns:
-            A SynthesizedResponse containing thought process and answer.
+            A SynthesizedResponse containing thought process, answer, and context sufficiency.
         """
         context_str = Synthesizer.dataframe_to_json(
-            context, columns_to_keep=["content", "category"]
+            context, columns_to_keep=["content"]
         )
 
         messages = [

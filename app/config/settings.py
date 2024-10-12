@@ -33,6 +33,12 @@ class OpenAISettings(LLMSettings):
     embedding_model: str = Field(default="text-embedding-3-small")
 
 
+class CohereSettings(BaseModel):
+    """Cohere-specific settings."""
+
+    api_key: str = Field(default_factory=lambda: os.getenv("COHERE_API_KEY"))
+
+
 class DatabaseSettings(BaseModel):
     """Database connection settings."""
 
@@ -42,7 +48,7 @@ class DatabaseSettings(BaseModel):
 class VectorStoreSettings(BaseModel):
     """Settings for the VectorStore."""
 
-    table_name: str = "embeddings"
+    table_name: str = "documents"
     embedding_dimensions: int = 1536
     time_partition_interval: timedelta = timedelta(days=7)
 
@@ -51,6 +57,7 @@ class Settings(BaseModel):
     """Main settings class combining all sub-settings."""
 
     openai: OpenAISettings = Field(default_factory=OpenAISettings)
+    cohere: CohereSettings = Field(default_factory=CohereSettings)
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
 
