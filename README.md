@@ -1,4 +1,4 @@
-# Building Advanced Hyrbid RAG Pipelines with PostgreSQL
+# Building Advanced Hybrid RAG Pipelines with PostgreSQL
 
 In this guide, we'll build an advanced Retrieval-Augmented Generation (RAG) pipeline using PostgreSQL with hybrid search capabilities. We'll implement a powerful system that leverages both keyword-based and semantic vector search, enhanced with Cohere's reranking endpoint, to provide highly relevant and accurate results. By the end of this tutorial, you'll have a flexible and efficient search solution capable of handling complex queries across diverse document types, setting the foundation for more sophisticated AI applications.
 
