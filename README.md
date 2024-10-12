@@ -1,6 +1,6 @@
-# Advanced RAG Pipelines with PostgreSQL (Hybrid Search + Contextual Retrieval)
+# Building Advanced Hyrbid RAG Pipelines with PostgreSQL
 
-In this guide, we'll build an advanced Retrieval-Augmented Generation (RAG) pipeline using PostgreSQL, combining hybrid search techniques with [contextual retrieval](https://www.anthropic.com/news/contextual-retrieval). We'll implement a powerful system that leverages both keyword-based and semantic vector search, enhanced by reranking capabilities, to provide highly relevant and accurate results. By the end of this tutorial, you'll have a flexible and efficient search solution capable of handling complex queries across diverse document types, setting the foundation for sophisticated AI-powered applications.
+In this guide, we'll build an advanced Retrieval-Augmented Generation (RAG) pipeline using PostgreSQL with hybrid search capabilities. We'll implement a powerful system that leverages both keyword-based and semantic vector search, enhanced with Cohere's reranking endpoint, to provide highly relevant and accurate results. By the end of this tutorial, you'll have a flexible and efficient search solution capable of handling complex queries across diverse document types, setting the foundation for more sophisticated AI applications.
 
 ## Prerequisites
 
@@ -120,7 +120,7 @@ This approach allows us to capture both lexical matches (from keyword search) an
 
 ## Reranking
 
-Reranking improves search relevance by reordering the result set from a retriever using a different model. It computes a relevance score between the query and each data object, sorting them from most to least relevant. This two-stage process ensures efficiency by retrieving relevant objects before reranking them. In our implementation, we use Cohere's reranking model to achieve this. This is an important step when you combine semantic search results with keyword search results.
+Reranking improves search relevance by reordering the result set from a retriever using a different model. It computes a relevance score between the query and each data object, sorting them from most to least relevant. This two-stage process ensures efficiency by retrieving relevant objects before reranking them. In our implementation, we use [Cohere's reranking model](https://cohere.com/blog/rerank) to achieve this. This is an important step when you combine semantic search results with keyword search results.
 
 ### Cohere's Reranking Implementation
 
