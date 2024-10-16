@@ -1,6 +1,6 @@
 pandas
 openai
-psycopg[binary]
+psycopg
 python-dotenv
 timescale-vector
 instructor
