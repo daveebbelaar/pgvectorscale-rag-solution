@@ -55,7 +55,13 @@ class VectorStore:
 
     def create_index(self) -> None:
         """Create the StreamingDiskANN index to spseed up similarity search"""
-        self.vec_client.create_embedding_index(client.DiskAnnIndex())
+        try:
+            self.vec_client.create_embedding_index(client.DiskAnnIndex())
+        except Exception as e:
+            if "relation \"embeddings_embedding_idx\" already exists" in str(e):
+                print("Index already exists, skipping creation.")
+            else:
+                raise e
 
     def drop_index(self) -> None:
         """Drop the StreamingDiskANN index in the database"""

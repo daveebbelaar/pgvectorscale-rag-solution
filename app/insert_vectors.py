@@ -8,7 +8,9 @@ from timescale_vector.client import uuid_from_time
 vec = VectorStore()
 
 # Read the CSV file
-df = pd.read_csv("../data/faq_dataset.csv", sep=";")
+df = pd.read_csv("/home/debian/pgvector/pgvectorscale-rag-solution/data/wip.csv", sep=",", encoding="utf-8")
+df.columns = df.columns.str.strip()
+print(df.columns)
 
 
 # Prepare data for insertion
@@ -32,13 +34,14 @@ def prepare_record(row):
 
         This is useful when your content already has an associated datetime.
     """
-    content = f"Question: {row['question']}\nAnswer: {row['answer']}"
+    content = f"Question: {row['Full Name']}\nMachine Name: {row['Machine Name']}\nEmployee Title: {row['Employee Title']}"
+    
     embedding = vec.get_embedding(content)
     return pd.Series(
         {
             "id": str(uuid_from_time(datetime.now())),
             "metadata": {
-                "category": row["category"],
+                "category": "Employee Data",
                 "created_at": datetime.now().isoformat(),
             },
             "contents": content,

@@ -10,8 +10,8 @@ vec = VectorStore()
 # Shipping question
 # --------------------------------------------------------------
 
-relevant_question = "What are your shipping options?"
-results = vec.search(relevant_question, limit=3)
+relevant_question = "Give me an example of data related to privacy"
+results = vec.search(relevant_question, limit=30)
 
 response = Synthesizer.generate_response(question=relevant_question, context=results)
 
@@ -79,6 +79,12 @@ results = vec.search(relevant_question, limit=3, predicates=predicates)
 # September — Returning results
 time_range = (datetime(2024, 9, 1), datetime(2024, 9, 30))
 results = vec.search(relevant_question, limit=3, time_range=time_range)
+print(f"\n{response.answer}")
+print("\nThought process:")
+for thought in response.thought_process:
+    print(f"- {thought}")
+print(f"\nContext: {response.enough_context}")
+
 
 # August — Not returning any results
 time_range = (datetime(2024, 8, 1), datetime(2024, 8, 30))
