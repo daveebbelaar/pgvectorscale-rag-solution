@@ -1,22 +1,29 @@
-import logging
+﻿import logging
 import time
+import sys
+from pathlib import Path
 from typing import Any, List, Optional, Tuple, Union
 from datetime import datetime
 
 import pandas as pd
-from config.settings import get_settings
-from openai import OpenAI
+from sentence_transformers import SentenceTransformer
 from timescale_vector import client
+
+# Allow this module to run directly from app/database.
+APP_DIR = Path(__file__).resolve().parents[1]
+if str(APP_DIR) not in sys.path:
+    sys.path.insert(0, str(APP_DIR))
+
+from config.settings import get_settings
 
 
 class VectorStore:
     """A class for managing vector operations and database interactions."""
 
     def __init__(self):
-        """Initialize the VectorStore with settings, OpenAI client, and Timescale Vector client."""
+        """Initialize the VectorStore with settings, embedding model, and Timescale Vector client."""
         self.settings = get_settings()
-        self.openai_client = OpenAI(api_key=self.settings.openai.api_key)
-        self.embedding_model = self.settings.openai.embedding_model
+        self.embedding_model = SentenceTransformer(self.settings.embedding.model)
         self.vector_settings = self.settings.vector_store
         self.vec_client = client.Sync(
             self.settings.database.service_url,
@@ -37,14 +44,10 @@ class VectorStore:
         """
         text = text.replace("\n", " ")
         start_time = time.time()
-        embedding = (
-            self.openai_client.embeddings.create(
-                input=[text],
-                model=self.embedding_model,
-            )
-            .data[0]
-            .embedding
-        )
+        embedding = self.embedding_model.encode(
+            text,
+            normalize_embeddings=True,
+        ).tolist()
         elapsed_time = time.time() - start_time
         logging.info(f"Embedding generated in {elapsed_time:.3f} seconds")
         return embedding
@@ -223,3 +226,4 @@ class VectorStore:
             logging.info(
                 f"Deleted records matching metadata filter from {self.vector_settings.table_name}"
             )
+
