@@ -1,17 +1,37 @@
-name: timescaledb
-
 services:
   timescaledb:
     image: timescale/timescaledb-ha:pg16
     container_name: timescaledb
+
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_PASSWORD=password
+      POSTGRES_DB: rag_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: paasword
+
     ports:
-      - "5432:5432"
+      - "5433:5432"
+
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
+
     restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    depends_on:
+      - timescaledb
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+
 
 volumes:
   timescaledb_data:
+  pgadmin_data:

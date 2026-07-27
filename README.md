@@ -36,7 +36,7 @@ Pgvectorscale Vector builds on top of [pgvector](https://github.com/pgvector/pgv
 ## Steps
 
 1. Set up Docker environment
-2. Connect to the database using a PostgreSQL GUI client (I use TablePlus)
+2. Connect to the database using a PostgreSQL GUI client such as pgAdmin
 3. Create a Python script to insert document chunks as vectors using OpenAI embeddings
 4. Create a Python function to perform similarity search
 
@@ -52,10 +52,11 @@ services:
     image: timescale/timescaledb-ha:pg16
     container_name: timescaledb
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_PASSWORD=password
+      POSTGRES_DB: rag_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: paasword
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -72,13 +73,25 @@ docker compose up -d
 
 ### 2. Connect to the database using a PostgreSQL GUI client
 
-- Open client
+- If you started the compose stack, open pgAdmin at http://localhost:5050
+- Use the default pgAdmin login from docker-compose.yml:
+  - Email: admin@example.com
+  - Password: admin123
+- Open pgAdmin
 - Create a new connection with the following details:
-  - Host: localhost
+  - Host name/address: timescaledb
   - Port: 5432
   - User: postgres
-  - Password: password
-  - Database: postgres
+  - Password: paasword
+  - Maintenance database: rag_db
+
+If you use a desktop pgAdmin installation instead of the container, use `localhost` on port `5433`.
+
+In pgAdmin, expand:
+
+`Databases` > `rag_db` > `Schemas` > `public` > `Tables`
+
+After you run the insert script, you should see the `embeddings` table there. You can right-click it and choose `View/Edit Data` to inspect the vector rows.
 
 ### 3. Create a Python script to insert document chunks as vectors
 
@@ -91,7 +104,7 @@ See `similarity_search.py` for the implementation. This script also uses OpenAI'
 ## Usage
 
 1. Create a copy of `example.env` and rename it to `.env`
-2. Open `.env` and fill in your OpenAI API key. Leave the database settings as is
+2. Open `.env` and fill in your OpenAI API key. Leave the database settings as is; they already point to `postgresql://postgres:paasword@localhost:5433/rag_db`
 3. Run the Docker container
 4. Install the required Python packages using `pip install -r requirements.txt`
 5. Execute `insert_vectors.py` to populate the database
